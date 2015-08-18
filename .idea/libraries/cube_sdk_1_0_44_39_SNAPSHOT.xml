@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="cube-sdk-1.0.44.39-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/ptr-demo/build/intermediates/exploded-aar/in.srain.cube/cube-sdk/1.0.44.39-SNAPSHOT/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/ptr-demo/build/intermediates/exploded-aar/in.srain.cube/cube-sdk/1.0.44.39-SNAPSHOT/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

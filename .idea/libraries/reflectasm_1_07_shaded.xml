@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="reflectasm-1.07-shaded">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/gradle-2.4/wrapper/dists/gradle-2.2.1-all/c64ydeuardnfqctvr1gm30w53/gradle-2.2.1/lib/reflectasm-1.07-shaded.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
