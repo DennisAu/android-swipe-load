@@ -2,6 +2,10 @@ package in.srain.cube.views.ptr.indicator;
 
 import android.graphics.PointF;
 
+/**
+ * PtrIndicator是一个辅助类，主要是用于记录PtrFrameLayout控件的一些位置信息、事件状态等。
+ * 这些信息为PtrFrameLayout的实现提供了决定性作用。
+ */
 public class PtrIndicator {
 
     public final static int POS_START = 0;

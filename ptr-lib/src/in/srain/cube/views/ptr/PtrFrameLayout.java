@@ -6,6 +6,7 @@ import android.util.AttributeSet;
 import android.view.*;
 import android.widget.Scroller;
 import android.widget.TextView;
+
 import in.srain.cube.views.ptr.indicator.PtrIndicator;
 import in.srain.cube.views.ptr.util.PtrCLog;
 
@@ -67,6 +68,18 @@ public class PtrFrameLayout extends ViewGroup {
     private long mLoadingStartTime = 0;
     private PtrIndicator mPtrIndicator;
     private boolean mHasSendCancelEvent = false;
+
+    public static final int SWIPE_DIRECTION_DOWN = 0;
+    public static final int SWIPE_DIRECTION_UP = 1;
+    public static final int SWIPE_DIRECTION_LEFT = 2;
+    public static final int SWIPE_DIRECTION_RIGHT = 3;
+
+    private int mSwipeDirection = SWIPE_DIRECTION_RIGHT;
+
+    //设置整个控件支持的方向。
+    public void setmSwipeDirection(int swipe_direction) {
+        mSwipeDirection = swipe_direction;
+    }
 
     public PtrFrameLayout(Context context) {
         this(context, null);
@@ -223,11 +236,40 @@ public class PtrFrameLayout extends ViewGroup {
 
         if (mHeaderView != null) {
             MarginLayoutParams lp = (MarginLayoutParams) mHeaderView.getLayoutParams();
-            final int left = paddingLeft + lp.leftMargin;
-            final int top = paddingTop + lp.topMargin + offsetX - mHeaderHeight;
-            final int right = left + mHeaderView.getMeasuredWidth();
-            final int bottom = top + mHeaderView.getMeasuredHeight();
+            int left = 0;
+            int top = 0;
+            int right = 0;
+            int bottom = 0;
+
+            switch (mSwipeDirection) {
+                case SWIPE_DIRECTION_DOWN:
+                    left = paddingLeft + lp.leftMargin;
+                    top = paddingTop + lp.topMargin + offsetX - mHeaderHeight;
+                    right = left + mHeaderView.getMeasuredWidth();
+                    bottom = top + mHeaderView.getMeasuredHeight();
+                    break;
+                case SWIPE_DIRECTION_UP:
+                    left = paddingLeft + lp.leftMargin;
+                    top = paddingTop + lp.topMargin - offsetX + this.getMeasuredHeight();
+                    right = left + mHeaderView.getMeasuredWidth();
+                    bottom = top + mHeaderView.getMeasuredHeight();
+                    break;
+                case SWIPE_DIRECTION_LEFT:
+                    left = paddingLeft + lp.leftMargin - offsetX + this.getMeasuredWidth();
+                    top = paddingTop + lp.topMargin;
+                    right = left + mHeaderView.getMeasuredWidth();
+                    bottom = top + mHeaderView.getMeasuredHeight();
+                    break;
+                case SWIPE_DIRECTION_RIGHT:
+                    left = paddingLeft + lp.leftMargin + offsetX;
+                    top = paddingTop + lp.topMargin - mHeaderHeight;
+                    right = left + mHeaderView.getMeasuredWidth();
+                    bottom = top + mHeaderView.getMeasuredHeight();
+                    break;
+            }
+
             mHeaderView.layout(left, top, right, bottom);
+
             if (DEBUG && DEBUG_LAYOUT) {
                 PtrCLog.d(LOG_TAG, "onLayout header: %s %s %s %s", left, top, right, bottom);
             }
@@ -236,11 +278,39 @@ public class PtrFrameLayout extends ViewGroup {
             if (isPinContent()) {
                 offsetX = 0;
             }
+
             MarginLayoutParams lp = (MarginLayoutParams) mContent.getLayoutParams();
-            final int left = paddingLeft + lp.leftMargin;
-            final int top = paddingTop + lp.topMargin + offsetX;
-            final int right = left + mContent.getMeasuredWidth();
-            final int bottom = top + mContent.getMeasuredHeight();
+            int left = 0;
+            int top = 0;
+            int right = 0;
+            int bottom = 0;
+
+            switch (mSwipeDirection) {
+                case SWIPE_DIRECTION_DOWN:
+                    left = paddingLeft + lp.leftMargin;
+                    top = paddingTop + lp.topMargin + offsetX;
+                    right = left + mContent.getMeasuredWidth();
+                    bottom = top + mContent.getMeasuredHeight();
+                    break;
+                case SWIPE_DIRECTION_UP:
+                    left = paddingLeft + lp.leftMargin;
+                    top = paddingTop + lp.topMargin - offsetX;
+                    right = left + mContent.getMeasuredWidth();
+                    bottom = top + mContent.getMeasuredHeight();
+                    break;
+                case SWIPE_DIRECTION_LEFT:
+                    left = paddingLeft + lp.leftMargin - offsetX;
+                    top = paddingTop + lp.topMargin;
+                    right = left + mContent.getMeasuredWidth();
+                    bottom = top + mContent.getMeasuredHeight();
+                    break;
+                case SWIPE_DIRECTION_RIGHT:
+                    left = paddingLeft + lp.leftMargin + offsetX;
+                    top = paddingTop + lp.topMargin;
+                    right = left + mContent.getMeasuredWidth();
+                    bottom = top + mContent.getMeasuredHeight();
+                    break;
+            }
             if (DEBUG && DEBUG_LAYOUT) {
                 PtrCLog.d(LOG_TAG, "onLayout content: %s %s %s %s", left, top, right, bottom);
             }
@@ -292,8 +362,28 @@ public class PtrFrameLayout extends ViewGroup {
             case MotionEvent.ACTION_MOVE:
                 mLastMoveEvent = e;
                 mPtrIndicator.onMove(e.getX(), e.getY());
-                float offsetX = mPtrIndicator.getOffsetX();
-                float offsetY = mPtrIndicator.getOffsetY();
+                float offsetX = 0;
+                float offsetY = 0;
+
+                switch (mSwipeDirection) {
+                    //实际上就改变了坐标为prt的相对坐标。
+                    case SWIPE_DIRECTION_DOWN:
+                        offsetX = mPtrIndicator.getOffsetX();
+                        offsetY = mPtrIndicator.getOffsetY();
+                        break;
+                    case SWIPE_DIRECTION_UP:
+                        offsetX = mPtrIndicator.getOffsetX();
+                        offsetY = - mPtrIndicator.getOffsetY();
+                        break;
+                    case SWIPE_DIRECTION_LEFT:
+                        offsetX = mPtrIndicator.getOffsetY();
+                        offsetY = - mPtrIndicator.getOffsetX();
+                        break;
+                    case SWIPE_DIRECTION_RIGHT:
+                        offsetX = mPtrIndicator.getOffsetY();
+                        offsetY = mPtrIndicator.getOffsetX();
+                        break;
+                }
 
                 if (mDisableWhenHorizontalMove && !mPreventForHorizontal && (Math.abs(offsetX) > mPagingTouchSlop && Math.abs(offsetX) > Math.abs(offsetY))) {
                     if (mPtrIndicator.isInStartPosition()) {
@@ -328,6 +418,10 @@ public class PtrFrameLayout extends ViewGroup {
 
     /**
      * if deltaY > 0, move the content down
+     * <p>已经到达顶部，不移动</p>
+     * <p>移动后超过顶部位置，将最终位置设置为顶部位置</p>
+     * <p>更新PtrIndicator信息</p>
+     * <p>调用updatePos(change)函数，更新位置以及状态信息。</p>
      *
      * @param deltaY
      */
@@ -355,6 +449,17 @@ public class PtrFrameLayout extends ViewGroup {
         updatePos(change);
     }
 
+    /**
+     * <p>如果发生了down事件并且已经move，则发送cancel事件给child。主要为了低调之前传递给child的down事件
+     * </p>
+     * <p>如果状态为init并离开初始位置或者刚刚完成刷新并位置大于完成刷新的位置，则将状态修改为prepare状态，并回调onUIRefreshPrepare函数</p>
+     * <p>如果当前move刚好回到起始位置，则调用tryToNotifyReset进行reset。然后，如果当前有down事件，则生成一个down事件dispatch给child。</p>
+     * <p>判断是否进入刷新状态，并调用tryToPerformRefresh进行刷新</p>
+     * <p>更新header、content位置</p>
+     * <p>PtrUIHandlerHolder回调onUIPositionChange函数</p>
+     *
+     * @param change
+     */
     private void updatePos(int change) {
         if (change == 0) {
             return;
@@ -407,9 +512,32 @@ public class PtrFrameLayout extends ViewGroup {
                     change, mPtrIndicator.getCurrentPosY(), mPtrIndicator.getLastPosY(), mContent.getTop(), mHeaderHeight);
         }
 
-        mHeaderView.offsetTopAndBottom(change);
-        if (!isPinContent()) {
-            mContent.offsetTopAndBottom(change);
+        switch (mSwipeDirection) {
+            case SWIPE_DIRECTION_DOWN:
+                mHeaderView.offsetTopAndBottom(change);
+                if (!isPinContent()) {
+                    mContent.offsetTopAndBottom(change);
+                }
+                break;
+            case SWIPE_DIRECTION_UP:
+                mHeaderView.offsetTopAndBottom(-change);
+                if (!isPinContent()) {
+                    mContent.offsetTopAndBottom(-change);
+                }
+                break;
+            case SWIPE_DIRECTION_LEFT:
+                mHeaderView.offsetLeftAndRight(-change);
+                if (!isPinContent()) {
+                    mContent.offsetLeftAndRight(-change);
+                }
+                break;
+            case SWIPE_DIRECTION_RIGHT:
+                mHeaderView.offsetLeftAndRight(change);
+                if (!isPinContent()) {
+                    mContent.offsetLeftAndRight(change);
+                }
+                break;
+
         }
         invalidate();
 
@@ -943,6 +1071,11 @@ public class PtrFrameLayout extends ViewGroup {
         }
     }
 
+    /**
+     * 类用于实现回弹。主要是通过scroller完成回弹效果。
+     * scroller的作用主要是模拟一次虚拟的回弹，主要为了获取回弹过程中的中间值。
+     * 通过这些瞬间位移的值来设置header、content两个布局的位置。
+     */
     class ScrollChecker implements Runnable {
 
         private int mLastFlingY;
